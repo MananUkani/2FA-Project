@@ -180,6 +180,38 @@ def delete():
     session.pop('mfa_secret', None)
     return redirect(url_for('index'))
 
+@app.route('/profile', methods=['GET', 'POST'])
+def profile():
+    if 'username' not in session:
+        return redirect(url_for('index'))
+
+    if request.method == 'POST':
+        new_username = request.form['username']
+        new_password = request.form['password']
+        username = session['username']
+
+        conn = get_db_connection()
+        if conn is None:
+            app.logger.error("Database connection error")
+            flash('Database connection error. Please try again later.')
+            return redirect(url_for('profile'))
+
+        cur = conn.cursor()
+        try:
+            cur.execute('UPDATE users SET username = ?, password = ? WHERE username = ?',
+                        (new_username, new_password, username))
+            conn.commit()
+            app.logger.info(f"User {username} updated successfully to {new_username}")
+            session['username'] = new_username
+            flash('Profile updated successfully.')
+        except sqlite3.Error as e:
+            app.logger.error(f"Database error during profile update: {e}")
+            flash('An error occurred while updating the profile. Please try again.')
+        finally:
+            conn.close()
+
+    return render_template('profile.html')
+
 # Test route to check QR code generation separately
 @app.route('/test_qr')
 def test_qr():
