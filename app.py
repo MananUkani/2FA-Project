@@ -68,7 +68,7 @@ def index():
                 otp_uri = pyotp.TOTP(mfa_secret).provisioning_uri(name=username, issuer_name='YourApp')
                 qr = qrcode.make(otp_uri)
                 buffered = BytesIO()
-                qr.save(buffered, 'PNG')
+                qr.save(buffered, format='PNG')  # Specify format explicitly
                 qr_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
                 qr_code = qr_base64
                 
@@ -153,14 +153,3 @@ def delete():
         flash('Account deleted successfully.')
     except sqlite3.Error as e:
         app.logger.error(f"Database error during account deletion: {e}")
-        flash('An error occurred while deleting the account. Please try again.')
-    finally:
-        conn.close()
-
-    session.pop('username', None)
-    session.pop('mfa_secret', None)
-    return redirect(url_for('index'))
-
-if __name__ == '__main__':
-    init_db()
-    app.run(debug=True)
