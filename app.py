@@ -5,12 +5,15 @@ import qrcode
 from io import BytesIO
 import base64
 import os
+from logging_config import setup_logging  # Import the logging configuration
 
 app = Flask(__name__)
-app.secret_key = os.getenv('SECRET_KEY', 'your_secret_key')  # Use environment variable for secret key
+app.secret_key = 'your_secret_key'  # Hardcoded secret key
+
+setup_logging()  # Set up logging
 
 def get_db_connection():
-    conn = sqlite3.connect(os.getenv('DATABASE_PATH', 'mfa.db'))
+    conn = sqlite3.connect('mfa.db')  # Hardcoded database path
     conn.row_factory = sqlite3.Row
     return conn
 
