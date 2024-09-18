@@ -7,6 +7,8 @@ import base64
 import os
 from logging_config import setup_logging  # Import the logging configuration
 
+logging.basicConfig(level=logging.INFO)
+
 app = Flask(__name__)
 app.secret_key = '11223344556677889900abcde12345'  # Hardcoded secret key
 
@@ -54,6 +56,7 @@ def index():
         if action == 'register':
             conn = get_db_connection()
             if conn is None:
+                app.logger.error("Database connection error")
                 flash('Database connection error. Please try again later.')
                 return render_template('index.html', qr_code=qr_code)
             cur = conn.cursor()
@@ -65,12 +68,14 @@ def index():
                 app.logger.info(f"User {username} registered successfully")
                 
                 # Generate QR code
+                app.logger.info("Generating QR code")
                 otp_uri = pyotp.TOTP(mfa_secret).provisioning_uri(name=username, issuer_name='YourApp')
                 qr = qrcode.make(otp_uri)
                 buffered = BytesIO()
                 qr.save(buffered, format='PNG')  # Specify format explicitly
                 qr_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
                 qr_code = qr_base64
+                app.logger.info("QR code generated successfully")
                 
                 flash('Registration successful! Scan the QR code to set up MFA.')
             except sqlite3.IntegrityError:
@@ -85,6 +90,7 @@ def index():
         elif action == 'login':
             conn = get_db_connection()
             if conn is None:
+                app.logger.error("Database connection error")
                 flash('Database connection error. Please try again later.')
                 return render_template('index.html', qr_code=qr_code)
             cur = conn.cursor()
@@ -143,6 +149,7 @@ def delete():
     username = session['username']
     conn = get_db_connection()
     if conn is None:
+        app.logger.error("Database connection error")
         flash('Database connection error. Please try again later.')
         return redirect(url_for('index'))
     cur = conn.cursor()
@@ -153,3 +160,14 @@ def delete():
         flash('Account deleted successfully.')
     except sqlite3.Error as e:
         app.logger.error(f"Database error during account deletion: {e}")
+        flash('An error occurred while deleting the account. Please try again.')
+    finally:
+        conn.close()
+
+    session.pop('username', None)
+    session.pop('mfa_secret', None)
+    return redirect(url_for('index'))
+
+if __name__ == '__main__':
+    init_db()
+    app.run(debug=True)
