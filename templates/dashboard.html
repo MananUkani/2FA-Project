@@ -2,13 +2,57 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f06, #4a90e2);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #fff;
+        }
+        .container {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            width: 350px;
+            text-align: center;
+            color: #333;
+        }
+        h1 {
+            margin-bottom: 20px;
+            color: #4a90e2;
+        }
+        button, a {
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4a90e2;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            margin-bottom: 10px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        button:hover, a:hover {
+            background-color: #357ABD;
+        }
+    </style>
 </head>
 <body>
-    <h1>Welcome, {{ session['username'] }}!</h1>
-    <form method="POST" action="{{ url_for('delete') }}">
-        <button type="submit">Delete Account</button>
-    </form>
-    <a href="{{ url_for('logout') }}">Logout</a>
+    <div class="container">
+        <h1>Welcome, {{ session['username'] }}!</h1>
+        <form method="POST" action="{{ url_for('delete') }}">
+            <button type="submit">Delete Account</button>
+        </form>
+        <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
 </body>
 </html>
