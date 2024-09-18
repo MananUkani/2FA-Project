@@ -9,25 +9,38 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f8f8f8;
             margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+            padding: 20px;
             color: #333;
         }
         .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
             background-color: #fff;
-            padding: 30px;
             border-radius: 10px;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
-            width: 350px;
-            text-align: center;
             position: relative;
         }
         h1 {
             margin-bottom: 20px;
             color: #4a90e2;
+            text-align: center;
+        }
+        .profile {
+            margin-bottom: 20px;
+        }
+        .tips {
+            margin-top: 20px;
+        }
+        .tips h2 {
+            color: #4a90e2;
+        }
+        .tips ul {
+            list-style-type: disc;
+            padding-left: 20px;
+        }
+        .tips li {
+            margin-bottom: 10px;
         }
         button, a {
             padding: 12px;
@@ -45,17 +58,40 @@
             background-color: #357ABD;
         }
         .footer {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
+            text-align: right;
             font-size: 12px;
             color: #aaa;
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Welcome, {{ session['username'] }}!</h1>
+        <div class="profile">
+            <h2>Your Profile</h2>
+            <p>Username: {{ session['username'] }}</p>
+            <form method="POST" action="{{ url_for('profile') }}">
+                <input type="text" name="username" placeholder="New Username" required>
+                <input type="password" name="password" placeholder="New Password" required>
+                <button type="submit">Update Profile</button>
+            </form>
+        </div>
+        <div class="tips">
+            <h2>Cybersecurity Tips and Tricks</h2>
+            <ul>
+                <li>Always use strong, unique passwords for each of your accounts.</li>
+                <li>Enable two-factor authentication (2FA) wherever possible.</li>
+                <li>Be cautious of phishing emails and messages. Verify the sender before clicking on any links.</li>
+                <li>Keep your software and devices updated to protect against vulnerabilities.</li>
+                <li>Use a reputable antivirus program and keep it updated.</li>
+                <li>Regularly back up your important data to a secure location.</li>
+                <li>Be aware of common scams and how to avoid them.</li>
+                <li>Do not share your MFA codes or passwords with anyone.</li>
+                <li>Monitor your accounts regularly for any suspicious activity.</li>
+                <li>Educate yourself about the latest cybersecurity threats and best practices.</li>
+            </ul>
+        </div>
         <form method="POST" action="{{ url_for('delete') }}">
             <button type="submit">Delete Account</button>
         </form>
