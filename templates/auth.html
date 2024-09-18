@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register or Login</title>
+</head>
+<body>
+    <h1>Register or Login</h1>
+
+    {% if 'username' in session %}
+        <p>Welcome, {{ session['username'] }}!</p>
+        <form action="{{ url_for('logout') }}" method="post">
+            <input type="submit" value="Logout">
+        </form>
+        <form action="/delete_account" method="post">
+            <input type="submit" value="Delete Account">
+        </form>
+    {% else %}
+        <form action="/" method="post">
+            <fieldset>
+                <legend>Register</legend>
+                <input type="hidden" name="action" value="register">
+                <label for="reg_username">Username:</label>
+                <input type="text" id="reg_username" name="username" required>
+                <br>
+                <label for="reg_password">Password:</label>
+                <input type="password" id="reg_password" name="password" required>
+                <br>
+                <input type="submit" value="Register">
+            </fieldset>
+        </form>
+
+        <form action="/" method="post">
+            <fieldset>
+                <legend>Login</legend>
+                <input type="hidden" name="action" value="login">
+                <label for="login_username">Username:</label>
+                <input type="text" id="login_username" name="username" required>
+                <br>
+                <label for="login_password">Password:</label>
+                <input type="password" id="login_password" name="password" required>
+                <br>
+                <label for="login_token">MFA Token:</label>
+                <input type="text" id="login_token" name="token" required>
+                <br>
+                <input type="submit" value="Login">
+            </fieldset>
+        </form>
+    {% endif %}
+
+    {% if qr_code_url %}
+        <h2>Scan this QR Code with your Authenticator App:</h2>
+        <img src="{{ qr_code_url }}" alt="QR Code">
+    {% endif %}
+
+    {% if message %}
+        <p>{{ message }}</p>
+    {% endif %}
+</body>
+</html>

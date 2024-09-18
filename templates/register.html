@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+<head>
+    <title>Register</title>
+</head>
+<body>
+    <h2>Register</h2>
+    <form method="post">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required><br>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required><br>
+        <button type="submit">Register</button>
+    </form>
+    <p>{{ message }}</p>
+    {% if message == 'Registration successful. Please log in.' %}
+        <img src="{{ url_for('static', filename='qrcode.png') }}" alt="QR Code">
+        <p>Scan this QR code with your authenticator app (e.g., Google Authenticator) to set up MFA.</p>
+    {% endif %}
+</body>
+</html>

@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+</head>
+<body>
+    <h1>Welcome, {{ session['username'] }}!</h1>
+    <form method="POST" action="{{ url_for('delete') }}">
+        <button type="submit">Delete Account</button>
+    </form>
+    <a href="{{ url_for('logout') }}">Logout</a>
+</body>
+</html>
