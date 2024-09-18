@@ -1,3 +1,4 @@
+import logging  # Ensure logging is imported
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 import sqlite3
 import pyotp
@@ -6,8 +7,6 @@ from io import BytesIO
 import base64
 import os
 from logging_config import setup_logging  # Import the logging configuration
-
-logging.basicConfig(level=logging.INFO)
 
 app = Flask(__name__)
 app.secret_key = '11223344556677889900abcde12345'  # Hardcoded secret key
