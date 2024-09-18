@@ -47,10 +47,15 @@ def index():
     qr_code = None
 
     if request.method == 'POST':
-        action = request.form.get('action')
-        username = request.form['username']
-        password = request.form['password']
-        app.logger.info(f"Form submitted with action: {action}, username: {username}")
+        try:
+            action = request.form.get('action')
+            username = request.form['username']
+            password = request.form['password']
+            app.logger.info(f"Form submitted with action: {action}, username: {username}")
+        except Exception as e:
+            app.logger.error(f"Error processing form data: {e}")
+            flash('Form data error.')
+            return render_template('index.html', qr_code=qr_code)
 
         if action == 'register':
             conn = get_db_connection()
@@ -58,6 +63,7 @@ def index():
                 app.logger.error("Database connection error")
                 flash('Database connection error. Please try again later.')
                 return render_template('index.html', qr_code=qr_code)
+
             cur = conn.cursor()
             mfa_secret = pyotp.random_base32()
             try:
@@ -65,24 +71,30 @@ def index():
                             (username, password, mfa_secret))
                 conn.commit()
                 app.logger.info(f"User {username} registered successfully")
-                
+
                 # Generate QR code
-                app.logger.info("Generating QR code")
+                app.logger.info(f"Generating QR code for user {username}")
                 otp_uri = pyotp.TOTP(mfa_secret).provisioning_uri(name=username, issuer_name='YourApp')
+                app.logger.debug(f"OTP URI generated: {otp_uri}")
+
                 qr = qrcode.make(otp_uri)
                 buffered = BytesIO()
-                qr.save(buffered, format='PNG')  # Specify format explicitly
+                qr.save(buffered, format='PNG')  # Ensure format is 'PNG'
                 qr_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
+                app.logger.debug("QR code generated successfully")
+
                 qr_code = qr_base64
-                app.logger.info("QR code generated successfully")
-                
                 flash('Registration successful! Scan the QR code to set up MFA.')
+
             except sqlite3.IntegrityError:
                 app.logger.warning(f"Username {username} already exists")
                 flash('Username already exists. Please log in instead.')
             except sqlite3.Error as e:
                 app.logger.error(f"Database error during registration: {e}")
                 flash('An error occurred during registration. Please try again.')
+            except Exception as e:
+                app.logger.error(f"Error during QR code generation: {e}")
+                flash('An error occurred generating the QR code. Please try again.')
             finally:
                 conn.close()
 
@@ -92,14 +104,14 @@ def index():
                 app.logger.error("Database connection error")
                 flash('Database connection error. Please try again later.')
                 return render_template('index.html', qr_code=qr_code)
+
             cur = conn.cursor()
             cur.execute('SELECT * FROM users WHERE username = ?', (username,))
             user = cur.fetchone()
             conn.close()
-            
+
             if user and user['password'] == password:
                 app.logger.info(f"User {username} logged in successfully")
-                # Store MFA secret in session to use it for verification
                 session['username'] = username
                 session['mfa_secret'] = user['mfa_secret']
                 return redirect(url_for('mfa_verification'))
@@ -151,6 +163,7 @@ def delete():
         app.logger.error("Database connection error")
         flash('Database connection error. Please try again later.')
         return redirect(url_for('index'))
+
     cur = conn.cursor()
     try:
         cur.execute('DELETE FROM users WHERE username = ?', (username,))
@@ -166,6 +179,22 @@ def delete():
     session.pop('username', None)
     session.pop('mfa_secret', None)
     return redirect(url_for('index'))
+
+# Test route to check QR code generation separately
+@app.route('/test_qr')
+def test_qr():
+    try:
+        mfa_secret = pyotp.random_base32()
+        otp_uri = pyotp.TOTP(mfa_secret).provisioning_uri(name="testuser", issuer_name='YourApp')
+        qr = qrcode.make(otp_uri)
+        buffered = BytesIO()
+        qr.save(buffered, format='PNG')
+        qr_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
+        app.logger.info("Test QR code generated successfully")
+        return f'<img src="data:image/png;base64,{qr_base64}">'
+    except Exception as e:
+        app.logger.error(f"Error during QR code generation: {e}")
+        return f"Error generating QR code: {e}", 500
 
 if __name__ == '__main__':
     init_db()
