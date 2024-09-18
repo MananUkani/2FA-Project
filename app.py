@@ -8,26 +8,33 @@ import os
 from logging_config import setup_logging  # Import the logging configuration
 
 app = Flask(__name__)
-app.secret_key = 'AB124778899334570'  # Hardcoded secret key
+app.secret_key = 'your_secret_key'  # Hardcoded secret key
 
 setup_logging()  # Set up logging
 
 def get_db_connection():
-    conn = sqlite3.connect('mfa.db')  # Hardcoded database path
-    conn.row_factory = sqlite3.Row
-    return conn
+    try:
+        conn = sqlite3.connect('mfa.db')  # Hardcoded database path
+        conn.row_factory = sqlite3.Row
+        return conn
+    except sqlite3.Error as e:
+        app.logger.error(f"Database connection error: {e}")
+        return None
 
 def init_db():
-    with get_db_connection() as conn:
-        conn.execute('''
-            CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT UNIQUE NOT NULL,
-                password TEXT NOT NULL,
-                mfa_secret TEXT NOT NULL
-            )
-        ''')
-        conn.commit()
+    try:
+        with get_db_connection() as conn:
+            conn.execute('''
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT UNIQUE NOT NULL,
+                    password TEXT NOT NULL,
+                    mfa_secret TEXT NOT NULL
+                )
+            ''')
+            conn.commit()
+    except sqlite3.Error as e:
+        app.logger.error(f"Database initialization error: {e}")
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -43,6 +50,9 @@ def index():
 
         if action == 'register':
             conn = get_db_connection()
+            if conn is None:
+                flash('Database connection error. Please try again later.')
+                return render_template('index.html', qr_code=qr_code)
             cur = conn.cursor()
             mfa_secret = pyotp.random_base32()
             try:
@@ -61,11 +71,17 @@ def index():
                 flash('Registration successful! Scan the QR code to set up MFA.')
             except sqlite3.IntegrityError:
                 flash('Username already exists. Please log in instead.')
+            except sqlite3.Error as e:
+                app.logger.error(f"Database error during registration: {e}")
+                flash('An error occurred during registration. Please try again.')
             finally:
                 conn.close()
 
         elif action == 'login':
             conn = get_db_connection()
+            if conn is None:
+                flash('Database connection error. Please try again later.')
+                return render_template('index.html', qr_code=qr_code)
             cur = conn.cursor()
             cur.execute('SELECT * FROM users WHERE username = ?', (username,))
             user = cur.fetchone()
@@ -116,14 +132,22 @@ def delete():
 
     username = session['username']
     conn = get_db_connection()
+    if conn is None:
+        flash('Database connection error. Please try again later.')
+        return redirect(url_for('index'))
     cur = conn.cursor()
-    cur.execute('DELETE FROM users WHERE username = ?', (username,))
-    conn.commit()
-    conn.close()
+    try:
+        cur.execute('DELETE FROM users WHERE username = ?', (username,))
+        conn.commit()
+        flash('Account deleted successfully.')
+    except sqlite3.Error as e:
+        app.logger.error(f"Database error during account deletion: {e}")
+        flash('An error occurred while deleting the account. Please try again.')
+    finally:
+        conn.close()
 
     session.pop('username', None)
     session.pop('mfa_secret', None)
-    flash('Account deleted successfully.')
     return redirect(url_for('index'))
 
 if __name__ == '__main__':
