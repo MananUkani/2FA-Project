@@ -8,7 +8,7 @@ import os
 from logging_config import setup_logging  # Import the logging configuration
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # Hardcoded secret key
+app.secret_key = 'AB124778899334570'  # Hardcoded secret key
 
 setup_logging()  # Set up logging
 
