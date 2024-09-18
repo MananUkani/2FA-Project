@@ -26,7 +26,7 @@ jobs:
       - name: Install dependencies
         run: |
           source venv/bin/activate
-          pip install flask sqlite3 pyotp qrcode[pil] pillow
+          pip install flask pyotp qrcode[pil] pillow
           pip install -r requirements.txt
         
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
